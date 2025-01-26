@@ -220,21 +220,13 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         return new ApiError(400,"Invalid videoId")
     }
 
-    const video = await Video.findByIdAndUpdate(videoId,
-        {
-            $set:{
-                isPublished:{
-                    $cond:{
-                        if:{$eq: {"isPublished":true} },
-                        then:false,
-                        else:true
-                    }
-                }
-            }
-            
-        },
-        {new:true}
-    )
+    const video = await Video.findById(videoId)
+    if(!video){
+        throw new ApiError(400,"Video not available")
+    }
+
+    video.isPublished = !video.isPublished
+    await video.save();
 
     return res.status(200).json(
         new ApiResponse(200,video, "Status changed Successfully")
